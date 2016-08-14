@@ -1,0 +1,116 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="css/stylesheet.css">
+		<script src="js/expenseCalculator.js" type="text/javascript"></script>
+	</head>
+	<body onkeydown="keyDown(event)" onkeyup="keyUp(event)">
+		<h1>Expense Calculator</h1>
+		<table class='calendar'>
+			<tr class='topRow'>
+				<th class="arrowClickyThingy" rowspan=2 class="arrowClickyThingy" onclick='arrowClicked(false)'> < </th>
+				<th id='year' colspan=5></th>
+				<th class="arrowClickyThingy"  rowspan=2 class="arrowClickyThingy" onclick='arrowClicked(true)'> > </th>
+			</tr>
+			<tr>
+				<th id='month' colspan=5></th>
+			</tr>
+			<tr class='days'>
+				<td>Sun</td>
+				<td>Mon</td>
+				<td>Tue</td>
+				<td>Wed</td>
+				<td>Thu</td>
+				<td>Fri</td>
+				<td>Sat</td>
+			</tr>
+			<tr>
+				<td id='day0'></td>
+				<td id='day1'></td>
+				<td id='day2'></td>
+				<td id='day3'></td>
+				<td id='day4'></td>
+				<td id='day5'></td>
+				<td id='day6'></td>
+			</tr>
+			<tr>
+				<td id='day7'></td>
+				<td id='day8'></td>
+				<td id='day9'></td>
+				<td id='day10'></td>
+				<td id='day11'></td>
+				<td id='day12'></td>
+				<td id='day13'></td>
+			</tr>
+			<tr>
+				<td id='day14'></td>
+				<td id='day15'></td>
+				<td id='day16'></td>
+				<td id='day17'></td>
+				<td id='day18'></td>
+				<td id='day19'></td>
+				<td id='day20'></td>
+			</tr>
+			<tr>
+				<td id='day21'></td>
+				<td id='day22'></td>
+				<td id='day23'></td>
+				<td id='day24'></td>
+				<td id='day25'></td>
+				<td id='day26'></td>
+				<td id='day27'></td>
+			</tr>
+			<tr>
+				<td id='day28'></td>
+				<td id='day29'></td>
+				<td id='day30'></td>
+				<td id='day31'></td>
+				<td id='day32'></td>
+				<td id='day33'></td>
+				<td id='day34'></td>
+			</tr>
+			<tr>
+				<td id='day35'></td>
+				<td id='day36'></td>
+				<td id='day37'></td>
+				<td id='day38'></td>
+				<td id='day39'></td>
+				<td id='day40'></td>
+				<td id='day41'></td>
+			</tr>
+		</table>
+		<div class="form" id="form">
+			<div class="form-content" id="form-content">
+				<h3 id="formTitle">Add an Expense</h3>
+				<div id="addedContent">
+				</div>
+				<button class="form-button" id="formConfirm" onclick="currentForm.save()">Confirm</button>
+				<button class="form-button" onclick="formCancel()">Cancel</button>
+			</div>
+		</div>
+		<div class="expenses">
+			<button class="addExpense" onclick="addAnExpense()"> Add an Expense </button>
+			<div class="expenseList">
+				<ul id="expenseListItems">
+				</ul>
+			</div>
+		</div>
+		<div class="incomes">
+			<button class="addIncome" onclick="addAnIncome()"> Add an Income </button>
+			<div class="incomeList">
+				<ul id="incomeListItems">
+				</ul>
+			</div>
+		</div>
+		<div class="starting-values">
+			<p>Starting Date:
+				<span class="starting-date" id="startingDate"></span>
+			 </p>
+			<p>Starting Money:
+				<input type="number" class="starting-money" id="startingMoney" value="0">
+			 </p>
+		</div>
+		<p>Ending Date:
+			<span class="ending-date" id="endingDate"></span>
+		</p>
+	</body>
+</html>
