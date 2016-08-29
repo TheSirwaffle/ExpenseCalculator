@@ -2,13 +2,15 @@ var currentDate;
 var currentForm;
 var startingDay;
 var endingDay;
-var expenses = new Array();
+var monetaryValues = new Array();
 var isCtrlDown = false;
 
 window.onload = function() {
 	var millis = Date.now();
 	var today = new Date(millis);
 	fillInCalendar(today);
+	var str = "value: { value: 12 } day: { 10 }";
+	_getKeyValueFromText("key", str);
 }
 
 function getNumberOfDays(year, month) {
@@ -34,8 +36,8 @@ function fillInCalendar(date) {
 	}
 	_fillInStartingAndEndingDays(firstDay);
 	_fillInCalculationDays();
-	document.getElementById('month').innerHTML = monthNames[date.getMonth()];
-	document.getElementById('year').innerHTML = date.getFullYear();
+	var monthAndYear = monthNames[date.getMonth()]+", "+date.getFullYear();
+	document.getElementById('monthAndYear').innerHTML = monthAndYear;
 }
 
 function _fillInStartingAndEndingDays(firstDay) {
@@ -123,11 +125,30 @@ function formCancel() {
 
 function savePage() {
 	var content = "";
-	for(expense in expenses) {
-		content += expense.toString();
+	if(startingDay != undefined) {
+		content += _createElement("startingDay", startingDay.getTime());
 	}
-	var uriContent = "data:application/octet-stream," + encodeURIComponent(content);
-	//var newWindow = window.open(uriContent, 'TestDocument');
+	if(endingDay != undefined) {
+		content += _createElement("endingDay", endingDay.getTime());
+	}
+	content += _createElement("startingMoney", document.getElementById("startingMoney").value);
+	for(item in monetaryValues) {
+		content += _createElement("monetaryValue", monetaryValues[item].toString());
+	}
+	var e = document.createElement('a');
+	e.setAttribute('href', "data:text/plain;charset=UTF-8," + encodeURIComponent(content));
+	e.setAttribute('download', "SavedInfo");
+	document.body.appendChild(e);
+	e.click();
+	document.body.removeChild(e);
+}
+
+function _createElement(key, element) {
+	return key+": {"+element+"} ";
+}
+
+function getDateString(date) {
+	return date.getMonth()+"/"+date.getDate()+"/"+date.getFullYear();
 }
 
 function selectDate(millis) {
@@ -150,6 +171,7 @@ function _selectStartingDay(millis) {
 		_unselectDate(endingDay);
 		document.getElementById("endingDate").innerHTML = "";
 	}
+	_calculateTotals();
 }
 
 function _selectEndingDay(millis) {
@@ -160,10 +182,11 @@ function _selectEndingDay(millis) {
 	}
 	endingDay = date;
 	_fillInCalculationDays();
+	_calculateTotals();
 }
 
 function _fillInDate(date, id, day) {
-	var str = (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear().toString().substr(2,2);;
+	var str = (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear().toString().substr(2,2);
 	document.getElementById(id).innerHTML = str;
 	_selectDate(date);
 }
@@ -212,6 +235,34 @@ function _clearOutCalculatedDays() {
 	}
 }
 
+function _calculateTotals() {
+	_clearTotals();
+	var total = parseInt(document.getElementById("startingMoney").value);
+	if(startingDay != undefined && endingDay != undefined) {
+		for(m in monetaryValues) {
+			var item = monetaryValues[m];
+			var calc = item.getMonetaryCalculation();
+			if(calc != 0) {
+				var str = item.name + " " + calc;
+				_addEstimate(str, item.isExpense);
+				total += (item.isExpense) ? -calc : calc;
+			}
+		}
+	}
+	document.getElementById("total").innerHTML = "$" + total;
+}
+
+function _clearTotals() {
+	document.getElementById("expenseEstimateList").innerHTML = "";
+	document.getElementById("incomeEstimateList").innerHTML = "";
+}
+
+function _addEstimate(value, isExpense) {
+	var id = (isExpense) ? "expenseEstimateList" : "incomeEstimateList";
+	var str = "<li>" + value + "</li>";
+	document.getElementById(id).innerHTML += str;
+}
+
 function keyDown(event) {
 	if(_isCtrlKey(event)) {
 		isCtrlDown = true;
@@ -228,6 +279,96 @@ function _isCtrlKey(event) {
 	return (event.code == "ControlRight" || event.code == "ControlLeft");
 }
 
+function _getDifferenceInMonths() {
+	var diff = 0;
+	if(startingDay.getFullYear() != endingDay.getFullYear()) {
+		var yearDiff = endingDay.getFullYear() - startingDay.getFullYear();
+		diff += 12 * (yearDiff - 1);
+		diff += 11 - startingDay.getMonth();
+		diff += startingDay.getMonth()+1;
+	}else {
+		diff += endingDay.getMonth() - startingDay.getMonth();
+	}
+	return diff;
+}
+
+function promptFileSelect() {
+	document.getElementById("fileSelector").click();
+}
+
+function fileSelected() {
+	var x = document.getElementById("fileSelector");
+	if ('files' in x) {
+		for (var i = 0; i < x.files.length; i++) {
+			var file = x.files[i];
+			var textType = /text.*/;
+            if (file.type.match(textType)) {
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					_readInFile(reader.result);
+				}
+				reader.readAsText(file);
+			}else {
+				alert("File not supported")
+			}
+		}
+	} 
+}
+
+function _readInFile(text) {
+	/* if(startingDay != undefined) {
+		content += _createElement("startingDay", startingDay.getTime());
+	}
+	if(endingDay != undefined) {
+		content += _createElement("endingDay", endingDay.getTime());
+	}
+	content += _createElement("startingMoney", document.getElementById("startingMoney").value);
+	for(item in monetaryValues) {
+		content += _createElement("monetaryValue", monetaryValues[item].toString());
+	} */
+	
+	var str = _getKeyValueFromText("startingDay", text);
+	if(str != undefined) {
+		_selectStartingDay(parseInt(str));
+	}
+	str = _getKeyValueFromText("endingDay", text);
+	if(str != undefined) {
+		_selectEndingDay(parseInt(str));
+	}
+	str = _getKeyValueFromText("startingMoney", text);
+	document.getElementById("startingMoney").value = parseInt(str);
+	while((str = _getKeyValueFromText("monetaryValue", text)) != undefined) {
+		var monetary = new MonetaryAlteration(true);
+		monetary.load(str);
+		text = text.replace("monetaryValue: {"+str+"}", "");
+	}
+	_calculateTotals();
+	console.log(text);
+}
+
+function _getKeyValueFromText(value, text) {
+	value = value+":";
+	var n = text.indexOf(value);
+	var str = undefined;
+	if(n != -1) {
+		var str = text.substr(n+value.length, text.length - n - value.length);
+		str = str.trim();
+		var braceCount = 1;
+		for(i = 1; i<str.length && braceCount != 0; i++) {
+			var currChar = str.charAt(i);
+			if(currChar == "{") {
+				braceCount++;
+			}else if(currChar == "}") {
+				braceCount--;
+			}
+			if(braceCount == 0) {
+				str = str.substr(1, i-1);
+			}
+		}
+		console.log(str);
+	}
+	return str;
+}
 
 
 /////////   OBJECTS (and useful object functions)     ///////
@@ -235,6 +376,7 @@ function _isCtrlKey(event) {
 function MonetaryAlteration(isExpense) {
 	this.rates = getRates(isExpense);
 	this.isExpense = isExpense;
+	this.editingIndex = -1;
 	this.selectedRate = "";
 	this.interval = -1;
 	this.startingDay = new Date(-1);
@@ -273,7 +415,7 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._createAmountEntry = function() {
-		this._createInputTag("Amount", "formAmount", "number", "min='1' value='1'");
+		this._createInputTag("Amount", "formAmount", "number", "min='1' value='1' step='.01'");
 	}
 	
 	this._updateTitle = function() {
@@ -302,18 +444,54 @@ function MonetaryAlteration(isExpense) {
 		}
 	}
 	
+	this.load = function(text) {
+		
+	}
+	
+	this.edit = function() {
+		currentForm = this;
+		this.createForm();
+		var index;
+		var combobox = document.getElementById("formComboBox");
+		for(i = 0; i<combobox.options.length; i++) {
+			if(combobox[i].label === this.selectedRate.name) {
+				index = i;
+			}
+		}
+		combobox.selectedIndex = index;
+		document.getElementById("formName").value = this.name;
+		document.getElementById("formInterval").value = this.interval;
+		var day = this.startingDay;
+		var dayToString = day.getFullYear()+"-"+this._addZeroToValue(day.getMonth()+1)+"-"+this._addZeroToValue(day.getDate());
+		document.getElementById("formStart").value = dayToString;
+		document.getElementById("formAmount").value = this.amount;
+		this.updateEnabledFields();
+		popForm();
+	}
+	
+	this._addZeroToValue = function(value) {
+		return (value < 10) ? "0"+value : value;
+	}
+	
 	this.save = function() {
 		var selector = document.getElementById("formComboBox");
 		var rate = selector.options[selector.selectedIndex].text;
 		this.selectedRate = this.rates[rate];
 		this.name = document.getElementById("formName").value;
 		this.interval = document.getElementById("formInterval").value;
-		this.startingDay = document.getElementById("formStart").value;
+		this.startingDay = this._getActualDate();
 		this.amount = document.getElementById("formAmount").value;
 		formCancel();
 		this.removeFormElements();
 		this._addToList();
-		savePage();
+		_calculateTotals();
+	}
+	
+	this._getActualDate = function() {
+		var value = document.getElementById("formStart").value;
+		var values = value.split("-");
+		var month = values[1] - 1;
+		return new Date(values[0], month, values[2]);
 	}
 	
 	this.removeFormElements = function() {
@@ -321,20 +499,146 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._addToList = function() {
-		var str = "<li>"+this.name+"&nbsp;&nbsp;&nbsp;&nbsp;"+this.amount+"</li>";
-		var id;
-		if(this.isExpense) {
-			id = "expenseListItems";
-			expenses.push(this);
+		if(this.editingIndex != -1) {
+			this._handleSaveEdit();
 		}else {
-			id = "incomeListItems";
+			this.editingIndex = monetaryValues.length;
+			var onclickString = "'monetaryValues[" + monetaryValues.length + "].edit()'";
+			var str = "<li id='monetaryValue:" + this.editingIndex + "' onclick=" + onclickString + ">"+this._generatePrintedValue()+"</li>";
+			var id;
+			if(this.isExpense) {
+				id = "expenseListItems";
+			}else {
+				id = "incomeListItems";
+			}
+			
+			monetaryValues.push(this);
+			var list = document.getElementById(id);
+			list.innerHTML += str;
 		}
-		var list = document.getElementById(id);
-		list.innerHTML += str;
+	}
+	
+	this._handleSaveEdit = function() {
+		var element = document.getElementById("monetaryValue:"+this.editingIndex);
+		element.innerHTML = this._generatePrintedValue();
+		monetaryValues[this.editingIndex] = this;
+	}
+	
+	this._generatePrintedValue = function() {
+		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;"+this.amount;
+	}
+	
+	this.getMonetaryCalculation = function() {
+		var numOccurances = this._getNumberOfOccurances();
+		var calc = this.amount * numOccurances;
+		if(this.selectedRate.name == "Spread") {
+			calc = ((12 * this.amount)/365.0) * numOccurances;
+		}
+		return calc;
+	}
+	
+	this._getNumberOfOccurances = function() {
+		var num = 0;
+		var name = this.selectedRate.name;
+		var day = this.startingDay;
+		if(name == "One Time") {
+			num = (day.getTime() >= startingDay.getTime() && day.getTime() <= endingDay.getTime()) ? 1 :0;
+		}else if(name == "Monthly") {
+			var diff = _getDifferenceInMonths();
+			num = this._getOccurancesFromInterval(diff, true);
+		}else if(name == "Weekly") {
+			var diff = this._getDifferenceInDays(startingDay, endingDay);
+			num = this._getOccurancesFromInterval(diff, false);
+		}else if(name == "Spread") {
+			num = this._getDifferenceInDays(startingDay, endingDay);
+		}
+		return num;
+	}
+	
+	this._getOccurancesFromInterval = function(diff, isMonth) {
+		var occurances = 0;
+		if(isMonth) {
+			var offset = startingDay.getMonth();
+			var mod = Math.abs(this.startingDay.getMonth() - offset) % this.interval ;
+			diff -= mod;
+			if(diff >= 0) {
+				occurances += Math.floor(diff/this.interval);
+				if(occurances == 0 && startingDay.getTime() <= this.startingDay.getTime() && endingDay.getTime() >= this.startingDay.getTime()) {
+					occurances++;
+				}else if(occurances == 0 && mod > 0 && (endingDay.getDate() >= this.startingDay.getDate() || diff/this.interval > occurances)) {
+					occurances++;
+				}else if(occurances > 0 && (endingDay.getDate() >= this.startingDay.getDate() || diff/this.interval > occurances)) {
+					occurances++;
+				}
+			}
+			/*if(diff % this.interval > 0) {
+				occurances++;
+			}
+			if(this.startingDay.getDate() > endingDay.getDate()){
+				occurances--;
+			}
+			if(mod == 0 && startingDay.getDate() > this.startingDay.getDate()) {
+				occurances--;
+			}*/
+		}else {
+			var diffInDays = this._getDifferenceInDays(this.startingDay, startingDay); //Get difference in starting days.
+			var usesSelectedDay = true;
+			if(diffInDays < 0) {
+				diffInDays = this._getDifferenceInDays(this.startingDay, endingDay); //Get difference in starting day to ending day.
+				usesSelectedDay = false;
+				diff = diffInDays;
+			}
+			if(diffInDays >= 0) {
+				var interval = 7 * this.interval;
+				if(diffInDays % interval != 0 && usesSelectedDay) {
+					var subtract = interval - (diffInDays % interval);
+					diff = diff - subtract;
+				}
+				if(diff >= 0) {
+					occurances = Math.floor((diff) / interval);
+					if(diff % interval >= 0) {
+						occurances++;
+					}
+				}
+			}
+		}
+		return occurances;
+	}
+	
+	this._getDifferenceInDays = function(firstDate, secondDate) {
+		var time1 = firstDate.getTime();
+		var time2 = secondDate.getTime();
+		var num = 0;
+		var diff = time2 - time1;
+		num = (diff / (1000 * 60 * 60 * 24));
+		return num;
 	}
 	
 	this.toString = function() {
-		return ""+this.name+" "+this.selectedRate.name+" "+this.interval+" "+this.startingDay+" "+this.amount;
+		var isExpense = _createElement("isExpense", this.isExpense);
+		var name = _createElement("name", this.name);
+		var rate = _createElement("selectedRate", this.selectedRate.name);
+		var interval = _createElement("interval", this.interval);
+		var startingDay = _createElement("moneyStartingDay", this.startingDay.getTime());
+		var amount = _createElement("amount", this.amount);
+		return isExpense+name+rate+interval+startingDay+amount;
+	}
+	
+	this.load = function(text) {
+		var str = _getKeyValueFromText("isExpense", text);
+		this.isExpense = (str === "true");
+		this.rates = getRates(this.isExpense);
+		str = _getKeyValueFromText("name", text);
+		this.name = str;
+		str = _getKeyValueFromText("selectedRate", text);
+		this.selectedRate = this.rates[str];
+		str = _getKeyValueFromText("interval", text);
+		this.interval = parseInt(str);
+		str = _getKeyValueFromText("moneyStartingDay", text);
+		this.startingDay = new Date(parseInt(str));
+		str = _getKeyValueFromText("amount", text);
+		this.amount = parseInt(str);
+		this._addToList();
 	}
 }
 

@@ -4,15 +4,11 @@
 		<script src="js/expenseCalculator.js" type="text/javascript"></script>
 	</head>
 	<body onkeydown="keyDown(event)" onkeyup="keyUp(event)">
-		<h1>Expense Calculator</h1>
 		<table class='calendar'>
 			<tr class='topRow'>
-				<th class="arrowClickyThingy" rowspan=2 class="arrowClickyThingy" onclick='arrowClicked(false)'> < </th>
-				<th id='year' colspan=5></th>
-				<th class="arrowClickyThingy"  rowspan=2 class="arrowClickyThingy" onclick='arrowClicked(true)'> > </th>
-			</tr>
-			<tr>
-				<th id='month' colspan=5></th>
+				<th class="arrowClickyThingy" class="arrowClickyThingy" onclick='arrowClicked(false)'> < </th>
+				<th id='monthAndYear' colspan=5></th>
+				<th class="arrowClickyThingy"  class="arrowClickyThingy" onclick='arrowClicked(true)'> > </th> 
 			</tr>
 			<tr class='days'>
 				<td>Sun</td>
@@ -112,5 +108,24 @@
 		<p>Ending Date:
 			<span class="ending-date" id="endingDate"></span>
 		</p>
+		<div class="calculations">
+			<p> Total: 
+				<span id="total" class="total"></span>
+			</p>
+			<hr>
+			<div class="estimatedMoneyList">
+				<p> Incomes </p>
+				<ul id="incomeEstimateList">
+				</ul>
+				<p> Expenses </p>
+				<ul id="expenseEstimateList">
+				</ul>
+			</div>
+		</div>
+		<div class="serialization">
+			<button onclick="savePage()">Save</button>
+			<button onclick="promptFileSelect()">Load</button>
+			<input  type="file" class="file-selector"id="fileSelector" onchange="fileSelected()">
+		</div>
 	</body>
 </html>

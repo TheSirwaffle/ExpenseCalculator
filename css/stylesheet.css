@@ -1,11 +1,14 @@
 body {
-	background-color: #00cc99;
+	background-color: #6283A8;
+	font-family: "Segoe UI";
 }
 
 .arrowClickyThingy {
 	cursor: pointer;
 	background-color: #6e6e6e;
 	color: #FFF;
+	font-size: 20pt;
+	padding-bottom: 1%;
 }
 
 .arrowClickyThingy:hover {
@@ -13,7 +16,19 @@ body {
 }
 
 .calendar {
-	width: 33%;
+	width: 50%;
+	border-style: solid;
+	border-width: 1px;
+	border-color: black;
+	padding: 30px;
+}
+
+#monthAndYear {
+	font-size: 25pt;
+}
+
+tr {
+	height: 3vw;
 }
 
 th, td {
@@ -51,20 +66,26 @@ ul {
 	width: 100%;
 	height: 100%;
 	display: inline-block;
+	padding-top: 7%;
+	font-size: 20pt;
 }
 
 .populated-day:hover {
-	background-color: #000;
+	background-color: #3D3D3D;
 	color: #efefef;
 	cursor: pointer;
 }
 
 .selected-day {
-	background-color: #600;
+	background-color: #263342;
 	color: #efefef;
 }
 
 .calculated-day {
-	background-color: #c30;
+	background-color: #40556E;
 	color: #efefef;
+}
+
+.file-selector {
+	display: none;
 }
