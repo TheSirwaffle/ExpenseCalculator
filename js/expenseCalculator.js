@@ -23,6 +23,7 @@ function getNumberOfDaysInMonth(date) {
 
 function fillInCalendar(date) {
 	clearCalendar();
+	
 	currentDate = date;
 	var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
 	var dayOfWeek = firstDay.getDay();
@@ -32,12 +33,29 @@ function fillInCalendar(date) {
 		var currentDay = new Date(date.getFullYear(), date.getMonth(), i+1);
 		var millis = currentDay.getTime();
 		var extraInfo = "id='"+millis+"' onclick='selectDate("+millis+")'";
-		document.getElementById(id).innerHTML = "<span class='populated-day' "+extraInfo+" >"+(i+1)+"</span>";
+		var classes = _obtainClasses(millis);
+		document.getElementById(id).innerHTML = "<span class='"+classes+"' "+extraInfo+" >"+(i+1)+"</span>";
 	}
 	_fillInStartingAndEndingDays(firstDay);
 	_fillInCalculationDays();
 	var monthAndYear = monthNames[date.getMonth()]+", "+date.getFullYear();
 	document.getElementById('monthAndYear').innerHTML = monthAndYear;
+}
+
+function _obtainClasses(millis) {
+	var today = new Date(Date.now());
+	today.setHours(0);
+	today.setMinutes(0);
+	today.setSeconds(0);
+	today.setMilliseconds(0);
+	var time = today.getTime();
+	var classes = "populated-day";
+	if(millis < time) {
+		classes += " past-day";
+	}else if(millis == time) {
+		classes += " today";
+	}
+	return classes;
 }
 
 function _fillInStartingAndEndingDays(firstDay) {
@@ -198,7 +216,7 @@ function _selectDate(date) {
 function _unselectDate(date) {
 	var day = document.getElementById(""+date.getTime());
 	if(day != undefined) {
-		day.className = "populated-day";
+		day.className = _obtainClasses(date.getTime());
 	}
 }
 
@@ -397,7 +415,7 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._createComboBox = function() {
-		var selector = "<select id='formComboBox' onchange='currentForm.updateEnabledFields()'>";
+		var selector = "<p>Occurance</p><select class='jank-as-balls-horizontal-alignment' id='formComboBox' onchange='currentForm.updateEnabledFields()'>";
 		for(i in this.rates) {
 			var obj = this.rates[i];
 			selector += "<option>"+obj.name+"</option>";
@@ -425,7 +443,7 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._createInputTag = function(name, id, type, additionalInfo) {
-		var str = "<p>"+name+"</p><input id='"+id+"' type='"+type+"' "+additionalInfo+">";
+		var str = "<p>"+name+"</p><input class='jank-as-balls-horizontal-alignment' id='"+id+"' type='"+type+"' "+additionalInfo+">";
 		this.addToForm(str);
 	}
 	

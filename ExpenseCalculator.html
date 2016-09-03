@@ -83,49 +83,48 @@
 				<button class="form-button" onclick="formCancel()">Cancel</button>
 			</div>
 		</div>
-		<div class="expenses">
-			<button class="addExpense" onclick="addAnExpense()"> Add an Expense </button>
-			<div class="expenseList">
-				<ul id="expenseListItems">
-				</ul>
+		<div class="super-div">
+			<div class="serialization">
+				<button class="save-and-load" onclick="savePage()">Save</button>
+			</div>
+			<div class="starting-values">
+				<p>Starting Date:</p>
+				<p>Starting Money: </p>
+			</div>
+			<p>Ending Date:</p>
+			<div class="calculations">
+				<p> Total:</p>
+				<div class="estimated-money-list">
+					Incomes
+					<ul class="list" id="incomeEstimateList"></ul>
+					<p> Expenses </p>
+					<ul class="list" id="expenseEstimateList"></ul>
+				</div>
 			</div>
 		</div>
-		<div class="incomes">
-			<button class="addIncome" onclick="addAnIncome()"> Add an Income </button>
-			<div class="incomeList">
-				<ul id="incomeListItems">
-				</ul>
-			</div>
-		</div>
-		<div class="starting-values">
-			<p>Starting Date:
-				<span class="starting-date" id="startingDate"></span>
-			 </p>
-			<p>Starting Money:
-				<input type="number" class="starting-money" id="startingMoney" value="0">
-			 </p>
-		</div>
-		<p>Ending Date:
-			<span class="ending-date" id="endingDate"></span>
-		</p>
-		<div class="calculations">
-			<p> Total: 
-				<span id="total" class="total"></span>
-			</p>
-			<hr>
-			<div class="estimatedMoneyList">
-				<p> Incomes </p>
-				<ul id="incomeEstimateList">
-				</ul>
-				<p> Expenses </p>
-				<ul id="expenseEstimateList">
-				</ul>
-			</div>
-		</div>
-		<div class="serialization">
-			<button onclick="savePage()">Save</button>
-			<button onclick="promptFileSelect()">Load</button>
+		<div class="right-values">
+			<button class="save-and-load" onclick="promptFileSelect()">Load</button>
 			<input  type="file" class="file-selector"id="fileSelector" onchange="fileSelected()">
+			<p class="starting-date" id="startingDate"></p>
+			$<input type="number" class="starting-money" id="startingMoney" value="0" onclick="this.select()">
+			<p class="ending-date" id="endingDate"></p>
+			<p id="total" class="total calculations">$0</p>
+		</div>
+		<div class="monetary-values">
+			<div class="expenses">
+				<button class="addExpense money-button" onclick="addAnExpense()"> Add an Expense </button>
+				<div class="expense-list money-list">
+					<ul id="expenseListItems">
+					</ul>
+				</div>
+			</div>
+			<div class="incomes">
+				<button class="add-income money-button" onclick="addAnIncome()"> Add an Income </button>
+				<div class="income-list money-list">
+					<ul id="incomeListItems">
+					</ul>
+				</div>
+			</div>
 		</div>
 	</body>
 </html>
