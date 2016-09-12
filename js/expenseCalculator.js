@@ -288,7 +288,45 @@ function _calculateTotals() {
 			}
 		}
 	}
+	total = _removeExtraDecimalsAndAddCommas(total);
 	document.getElementById("total").innerHTML = "$" + total;
+}
+
+function _removeExtraDecimalsAndAddCommas(total) {
+	return _addCommas(_removeDecimals(total));
+}
+
+function _removeDecimals(total) {
+	var newTotal = ""+total;
+	if(newTotal.includes(".")) {
+		var index = newTotal.indexOf(".");
+		var sub = newTotal.substring(index+1);
+		if(sub.length > 2) {
+			newTotal = newTotal.substring(0, index+3);
+		}else if(sub.length == 1) {
+			newTotal = newTotal.substring(0, index+2)+"0";
+		}
+	}
+	return newTotal;
+}
+
+function _addCommas(total) {
+	var newTotal = "";
+	var count = -1;
+	total = total.split("").reverse().join("");
+	for(i = 0; i < total.length; i++) {
+		if(count == -1 && total.charAt(i) == '.') {
+			count = 0;
+		}else if(count == 3) {
+			newTotal += ",";
+			count = 0;
+		}else if(count != -1){
+			count++;
+		}
+		newTotal += total.charAt(i);
+	}
+	newTotal = newTotal.split("").reverse().join("");
+	return newTotal;
 }
 
 function _clearTotals() {
@@ -298,7 +336,7 @@ function _clearTotals() {
 
 function _addEstimate(value, isExpense) {
 	var id = (isExpense) ? "expenseEstimateList" : "incomeEstimateList";
-	var str = "<li>" + value + "</li>";
+	var str = "<li class='estimate-value'>" + value + "</li>";
 	document.getElementById(id).innerHTML += str;
 }
 
@@ -357,7 +395,9 @@ function fileSelected() {
 function _readInFile(text) {
 	var str = _getKeyValueFromText("startingDay", text);
 	if(str != undefined) {
-		startingDay = new Date(0);
+		if(startingDay == undefined) {
+			startingDay = new Date(0);
+		}
 		_selectStartingDay(parseInt(str));
 	}
 	str = _getKeyValueFromText("endingDay", text);
@@ -365,7 +405,7 @@ function _readInFile(text) {
 		_selectEndingDay(parseInt(str));
 	}
 	str = _getKeyValueFromText("startingMoney", text);
-	document.getElementById("startingMoney").value = parseInt(str);
+	document.getElementById("startingMoney").value = parseFloat(str);
 	while((str = _getKeyValueFromText("monetaryValue", text)) != undefined) {
 		var monetary = new MonetaryAlteration(true);
 		monetary.load(str);
@@ -504,7 +544,7 @@ function MonetaryAlteration(isExpense) {
 		var day = this.startingDay;
 		var dayToString = day.getFullYear()+"-"+this._addZeroToValue(day.getMonth()+1)+"-"+this._addZeroToValue(day.getDate());
 		document.getElementById("formStart").value = dayToString;
-		document.getElementById("formAmount").value = this.amount;
+		document.getElementById("formAmount").value = (_removeDecimals(this.amount));
 		this.updateEnabledFields();
 		popForm("form");
 	}
@@ -525,12 +565,15 @@ function MonetaryAlteration(isExpense) {
 			this.interval = document.getElementById("formInterval").value;
 			this.startingDay = this._getActualDate();
 			this.amount = document.getElementById("formAmount").value;
+			this.amount = parseFloat(_removeDecimals(this.amount));
 			formCancel("form");
 			this.removeFormElements();
 			this._addToList();
 			_calculateTotals();
 			if(monetaryValues.length == 1) {
 				_popTip("You can edit any income or expense by simply clicking on it.");
+			}else if(monetaryValues.length == 3) {
+				_popTip("To save your current calculations simply click on \"Save\". To load the calculations simply click \"Load\" and navigate to the downloaded file.")
 			}
 		}
 	}
@@ -541,11 +584,11 @@ function MonetaryAlteration(isExpense) {
 		if(document.getElementById("formName").value === "") {
 			errors += "You need to enter a name. ";
 		}
-		if(document.getElementById("formStart").value === "") {
+		if(document.getElementById("formStart").value === "" && !document.getElementById("formStart").disabled) {
 			errors += "You must select a valid starting date. ";
 		}
 		if(errors != "") {
-			errors = "In order to save this "+str+" the following errors must be resolved. "+errors;
+			errors = "In order to save this "+str+" the following error(s) must be resolved. "+errors;
 		}
 		return errors;
 	}
@@ -588,7 +631,7 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._generatePrintedValue = function() {
-		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;$"+this.amount;
+		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;$"+_removeDecimals(this.amount);
 	}
 	
 	this.getMonetaryCalculation = function() {
@@ -691,7 +734,7 @@ function MonetaryAlteration(isExpense) {
 		str = _getKeyValueFromText("moneyStartingDay", text);
 		this.startingDay = new Date(parseInt(str));
 		str = _getKeyValueFromText("amount", text);
-		this.amount = parseInt(str);
+		this.amount = parseFloat(str);
 		this._addToList();
 	}
 }

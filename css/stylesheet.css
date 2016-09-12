@@ -73,6 +73,7 @@ ul.expense-list-items, ul.income-list-items {
     padding: 20px;
     border: 1px solid #888;
     width: 30%;
+	min-width: 400px;
 }
 
 .tip-content {
@@ -249,10 +250,14 @@ ul.expense-list-items, ul.income-list-items {
 }
 
 .jank-as-balls-horizontal-alignment {
-	margin-left: 8%;
+	margin-left: 150px;
     width: 20%;
     margin-top: -37px;
     position: absolute;
+}
+
+.estimate-value {
+	margin-bottom: 5px;
 }
 
 .tooltip {
