@@ -121,23 +121,39 @@ var monthNames = ["January", "February", "March", "April", "May", "June",
 function addAnExpense() {
 	currentForm = new MonetaryAlteration(true);
 	currentForm.createForm();
-	popForm();
+	popForm("form");
 }
 
 function addAnIncome() {
 	currentForm = new MonetaryAlteration(false);
 	currentForm.createForm();
-	popForm();
+	popForm("form");
 }
 
-function popForm() {
-	var form = document.getElementById("form");
+function _popTip(tip) {
+	_popOtherForm("Tip", tip);
+}
+
+function _popError(error) {
+	_popOtherForm("Error", error);
+}
+
+function _popOtherForm(header, info) {
+	document.getElementById("tipHeader").innerHTML = header;
+	document.getElementById("tipText").innerHTML = info;
+	popForm("tipForm");
+}
+
+function popForm(id) {
+	var form = document.getElementById(id);
 	form.style.display = "block";
 }
 
-function formCancel() {
-	currentForm.removeFormElements();
-	var form = document.getElementById("form");
+function formCancel(id) {
+	if(id === "form") {
+		currentForm.removeFormElements();
+	}
+	var form = document.getElementById(id);
 	form.style.display = "none";
 }
 
@@ -170,7 +186,7 @@ function getDateString(date) {
 }
 
 function selectDate(millis) {
-	if(startingDay == undefined || isCtrlDown) {
+	if(startingDay == undefined || isCtrlDown || startingDay.getTime() > millis) {
 		_selectStartingDay(millis);
 	}else if(startingDay.getTime() < millis){
 		_selectEndingDay(millis);
@@ -183,6 +199,8 @@ function _selectStartingDay(millis) {
 	_fillInDate(date, "startingDate");
 	if(startingDay != undefined) {
 		_unselectDate(startingDay);
+	}else {
+		_popTip("Either select a date occuring before the starting date or hold CTRL to select a different starting date.");
 	}
 	startingDay = date;
 	if(endingDay != undefined && endingDay.getTime() < startingDay.getTime()) {
@@ -210,7 +228,10 @@ function _fillInDate(date, id, day) {
 }
 
 function _selectDate(date) {
-	document.getElementById(""+date.getTime()).className += " selected-day";
+	var element = document.getElementById(""+date.getTime());
+	if(element != undefined) {
+		element.className += " selected-day";
+	}
 }
 
 function _unselectDate(date) {
@@ -261,7 +282,7 @@ function _calculateTotals() {
 			var item = monetaryValues[m];
 			var calc = item.getMonetaryCalculation();
 			if(calc != 0) {
-				var str = item.name + " " + calc;
+				var str = item.name + "&nbsp;&nbsp;&nbsp;&nbsp;$" + calc;
 				_addEstimate(str, item.isExpense);
 				total += (item.isExpense) ? -calc : calc;
 			}
@@ -334,19 +355,9 @@ function fileSelected() {
 }
 
 function _readInFile(text) {
-	/* if(startingDay != undefined) {
-		content += _createElement("startingDay", startingDay.getTime());
-	}
-	if(endingDay != undefined) {
-		content += _createElement("endingDay", endingDay.getTime());
-	}
-	content += _createElement("startingMoney", document.getElementById("startingMoney").value);
-	for(item in monetaryValues) {
-		content += _createElement("monetaryValue", monetaryValues[item].toString());
-	} */
-	
 	var str = _getKeyValueFromText("startingDay", text);
 	if(str != undefined) {
+		startingDay = new Date(0);
 		_selectStartingDay(parseInt(str));
 	}
 	str = _getKeyValueFromText("endingDay", text);
@@ -415,7 +426,12 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._createComboBox = function() {
-		var selector = "<p>Occurance</p><select class='jank-as-balls-horizontal-alignment' id='formComboBox' onchange='currentForm.updateEnabledFields()'>";
+		var str = (this.isExpense)?"expense":"income";
+		var tooltip = "The occurance style that this "+str+" will have.";
+		if(this.isExpense) {
+			tooltip += " The spread option is for an expense that is a generalized for a month (food, gas, etc). The amount will be the monthly value but is calculated such that the amount will be the average monthly cost, meaning that months with 31 days in them will have a larger cost while months with less than 31 days in them will have a lower cost.";
+		}
+		var selector = "<span class='tooltip'>Occurance<spane class='tooltip-text'>"+tooltip+"</span></span><br><br><select class='jank-as-balls-horizontal-alignment' id='formComboBox' onchange='currentForm.updateEnabledFields()'>";
 		for(i in this.rates) {
 			var obj = this.rates[i];
 			selector += "<option>"+obj.name+"</option>";
@@ -425,11 +441,11 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._createIntervalEntry = function() {
-		this._createInputTag("Interval", "formInterval", "number", "min='1' max='12' value='1'");
+		this._createInputTagWithTooltip("Rate", "formInterval", "number", "min='1' max='12' value='1'", "The rate at which the $monetaryType occurs. Example: If you had Weekly selected as your occurance and a rate of 2, then that would mean that this $monetaryType would occur every 2 weeks.");
 	}
 	
 	this._createStartingDayEntry = function() {
-		this._createInputTag("Starting Day", "formStart", "date");
+		this._createInputTagWithTooltip("Starting Day", "formStart", "date", "", "The first day this $monetaryType will occur.");
 	}
 	
 	this._createAmountEntry = function() {
@@ -444,6 +460,12 @@ function MonetaryAlteration(isExpense) {
 	
 	this._createInputTag = function(name, id, type, additionalInfo) {
 		var str = "<p>"+name+"</p><input class='jank-as-balls-horizontal-alignment' id='"+id+"' type='"+type+"' "+additionalInfo+">";
+		this.addToForm(str);
+	}
+	
+	this._createInputTagWithTooltip = function(name, id, type, additionalInfo, tooltipText) {
+		tooltipText = tooltipText.replace(/\$monetaryType/g, (this.isExpense)?"expense":"income");
+		var str = "<span class='tooltip'>"+name+"<span class='tooltip-text'>"+tooltipText+"</span></span><br><br><input class='jank-as-balls-horizontal-alignment' id='"+id+"' type='"+type+"' "+additionalInfo+">";
 		this.addToForm(str);
 	}
 	
@@ -484,7 +506,7 @@ function MonetaryAlteration(isExpense) {
 		document.getElementById("formStart").value = dayToString;
 		document.getElementById("formAmount").value = this.amount;
 		this.updateEnabledFields();
-		popForm();
+		popForm("form");
 	}
 	
 	this._addZeroToValue = function(value) {
@@ -492,17 +514,40 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this.save = function() {
-		var selector = document.getElementById("formComboBox");
-		var rate = selector.options[selector.selectedIndex].text;
-		this.selectedRate = this.rates[rate];
-		this.name = document.getElementById("formName").value;
-		this.interval = document.getElementById("formInterval").value;
-		this.startingDay = this._getActualDate();
-		this.amount = document.getElementById("formAmount").value;
-		formCancel();
-		this.removeFormElements();
-		this._addToList();
-		_calculateTotals();
+		var errors = this._determineErrors();
+		if(errors != "") {
+			_popError(errors);
+		}else {
+			var selector = document.getElementById("formComboBox");
+			var rate = selector.options[selector.selectedIndex].text;
+			this.selectedRate = this.rates[rate];
+			this.name = document.getElementById("formName").value;
+			this.interval = document.getElementById("formInterval").value;
+			this.startingDay = this._getActualDate();
+			this.amount = document.getElementById("formAmount").value;
+			formCancel("form");
+			this.removeFormElements();
+			this._addToList();
+			_calculateTotals();
+			if(monetaryValues.length == 1) {
+				_popTip("You can edit any income or expense by simply clicking on it.");
+			}
+		}
+	}
+	
+	this._determineErrors = function() {
+		var errors = "";
+		var str = (this.isExpense)?"expense":"income";
+		if(document.getElementById("formName").value === "") {
+			errors += "You need to enter a name. ";
+		}
+		if(document.getElementById("formStart").value === "") {
+			errors += "You must select a valid starting date. ";
+		}
+		if(errors != "") {
+			errors = "In order to save this "+str+" the following errors must be resolved. "+errors;
+		}
+		return errors;
 	}
 	
 	this._getActualDate = function() {
@@ -522,7 +567,7 @@ function MonetaryAlteration(isExpense) {
 		}else {
 			this.editingIndex = monetaryValues.length;
 			var onclickString = "'monetaryValues[" + monetaryValues.length + "].edit()'";
-			var str = "<li id='monetaryValue:" + this.editingIndex + "' onclick=" + onclickString + ">"+this._generatePrintedValue()+"</li>";
+			var str = "<li class='monetary-value-item' id='monetaryValue:" + this.editingIndex + "' onclick=" + onclickString + ">"+this._generatePrintedValue()+"</li>";
 			var id;
 			if(this.isExpense) {
 				id = "expenseListItems";
@@ -543,7 +588,7 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._generatePrintedValue = function() {
-		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;"+this.amount;
+		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;$"+this.amount;
 	}
 	
 	this.getMonetaryCalculation = function() {
@@ -589,15 +634,6 @@ function MonetaryAlteration(isExpense) {
 					occurances++;
 				}
 			}
-			/*if(diff % this.interval > 0) {
-				occurances++;
-			}
-			if(this.startingDay.getDate() > endingDay.getDate()){
-				occurances--;
-			}
-			if(mod == 0 && startingDay.getDate() > this.startingDay.getDate()) {
-				occurances--;
-			}*/
 		}else {
 			var diffInDays = this._getDifferenceInDays(this.startingDay, startingDay); //Get difference in starting days.
 			var usesSelectedDay = true;

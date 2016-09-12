@@ -74,13 +74,20 @@
 				<td id='day41'></td>
 			</tr>
 		</table>
+		<div class="form error" id="tipForm">
+			<div class="tip-content">
+				<h3 id="tipHeader">Tip</h3>
+				<p id="tipText"></p>
+				<button class="form-button tip-button" onclick="formCancel('tipForm')">OK</button>
+			</div>
+		</div>
 		<div class="form" id="form">
 			<div class="form-content" id="form-content">
 				<h3 id="formTitle">Add an Expense</h3>
 				<div id="addedContent">
 				</div>
 				<button class="form-button" id="formConfirm" onclick="currentForm.save()">Confirm</button>
-				<button class="form-button" onclick="formCancel()">Cancel</button>
+				<button class="form-button" onclick="formCancel('form')">Cancel</button>
 			</div>
 		</div>
 		<div class="super-div">
@@ -114,14 +121,14 @@
 			<div class="expenses">
 				<button class="addExpense money-button" onclick="addAnExpense()"> Add an Expense </button>
 				<div class="expense-list money-list">
-					<ul id="expenseListItems">
+					<ul class="expense-list-items" id="expenseListItems">
 					</ul>
 				</div>
 			</div>
 			<div class="incomes">
 				<button class="add-income money-button" onclick="addAnIncome()"> Add an Income </button>
 				<div class="income-list money-list">
-					<ul id="incomeListItems">
+					<ul class="income-list-items" id="incomeListItems">
 					</ul>
 				</div>
 			</div>
