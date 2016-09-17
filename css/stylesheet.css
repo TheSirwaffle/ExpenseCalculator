@@ -72,8 +72,7 @@ ul.expense-list-items, ul.income-list-items {
     margin: auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 30%;
-	min-width: 400px;
+    width: 500px;
 }
 
 .tip-content {
@@ -251,7 +250,7 @@ ul.expense-list-items, ul.income-list-items {
 
 .jank-as-balls-horizontal-alignment {
 	margin-left: 150px;
-    width: 20%;
+    width: 324px;
     margin-top: -37px;
     position: absolute;
 }
@@ -263,6 +262,12 @@ ul.expense-list-items, ul.income-list-items {
 .tooltip {
     position: relative;
     border-bottom: 2px solid black;
+}
+
+.delete-button {
+	display: none;
+	background-color: #5e1111;
+	float: right;
 }
 
 .tooltip .tooltip-text {

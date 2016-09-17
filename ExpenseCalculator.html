@@ -88,6 +88,7 @@
 				</div>
 				<button class="form-button" id="formConfirm" onclick="currentForm.save()">Create</button>
 				<button class="form-button" onclick="formCancel('form')">Cancel</button>
+				<button class="form-button delete-button" id="formDelete" onclick="formDelete()">Delete</button>
 			</div>
 		</div>
 		<div class="super-div">
@@ -113,7 +114,7 @@
 			<button class="save-and-load" onclick="promptFileSelect()">Load</button>
 			<input  type="file" class="file-selector"id="fileSelector" onchange="fileSelected()">
 			<p class="starting-date" id="startingDate"></p>
-			$<input type="number" class="starting-money" id="startingMoney" value="0" onclick="this.select()">
+			$<input type="number" class="starting-money" id="startingMoney" value="0" onclick="this.select()" onchange="inputChanged()" step=.01>
 			<p class="ending-date" id="endingDate"></p>
 			<p id="total" class="total calculations">$0</p>
 		</div>

@@ -2,8 +2,9 @@ var currentDate;
 var currentForm;
 var startingDay;
 var endingDay;
-var monetaryValues = new Array();
+var monetaryValues = {};
 var isCtrlDown = false;
+var currIndex = 0;
 
 window.onload = function() {
 	var millis = Date.now();
@@ -157,6 +158,10 @@ function formCancel(id) {
 	form.style.display = "none";
 }
 
+function formDelete() {
+	currentForm.deleteValue();
+}
+
 function savePage() {
 	var content = "";
 	if(startingDay != undefined) {
@@ -276,13 +281,13 @@ function _clearOutCalculatedDays() {
 
 function _calculateTotals() {
 	_clearTotals();
-	var total = parseInt(document.getElementById("startingMoney").value);
+	var total = parseFloat(document.getElementById("startingMoney").value);
 	if(startingDay != undefined && endingDay != undefined) {
 		for(m in monetaryValues) {
 			var item = monetaryValues[m];
 			var calc = item.getMonetaryCalculation();
 			if(calc != 0) {
-				var str = item.name + "&nbsp;&nbsp;&nbsp;&nbsp;$" + calc;
+				var str = item.name + "&nbsp;&nbsp;&nbsp;&nbsp;$" + _removeExtraDecimalsAndAddCommas(calc);
 				_addEstimate(str, item.isExpense);
 				total += (item.isExpense) ? -calc : calc;
 			}
@@ -338,6 +343,12 @@ function _addEstimate(value, isExpense) {
 	var id = (isExpense) ? "expenseEstimateList" : "incomeEstimateList";
 	var str = "<li class='estimate-value'>" + value + "</li>";
 	document.getElementById(id).innerHTML += str;
+}
+
+function inputChanged() {
+	var element = document.getElementById("startingMoney");
+	element.value = _removeDecimals(element.value);
+	_calculateTotals();
 }
 
 function keyDown(event) {
@@ -412,7 +423,6 @@ function _readInFile(text) {
 		text = text.replace("monetaryValue: {"+str+"}", "");
 	}
 	_calculateTotals();
-	console.log(text);
 }
 
 function _getKeyValueFromText(value, text) {
@@ -434,7 +444,6 @@ function _getKeyValueFromText(value, text) {
 				str = str.substr(1, i-1);
 			}
 		}
-		console.log(str);
 	}
 	return str;
 }
@@ -524,13 +533,17 @@ function MonetaryAlteration(isExpense) {
 		}
 	}
 	
-	this.load = function(text) {
-		
+	this.deleteValue = function() {
+		delete monetaryValues[""+currIndex];
+		formCancel("form");
+		this.removeFormElements();
+		this._removeFromList();
 	}
 	
 	this.edit = function() {
 		currentForm = this;
 		this.createForm();
+		this._addDeleteButton();
 		var index;
 		var combobox = document.getElementById("formComboBox");
 		for(i = 0; i<combobox.options.length; i++) {
@@ -547,6 +560,10 @@ function MonetaryAlteration(isExpense) {
 		document.getElementById("formAmount").value = (_removeDecimals(this.amount));
 		this.updateEnabledFields();
 		popForm("form");
+	}
+	
+	this._addDeleteButton = function() {
+		var element = document.getElementById("formDelete").style.display = "initial";
 	}
 	
 	this._addZeroToValue = function(value) {
@@ -570,9 +587,9 @@ function MonetaryAlteration(isExpense) {
 			this.removeFormElements();
 			this._addToList();
 			_calculateTotals();
-			if(monetaryValues.length == 1) {
-				_popTip("You can edit any income or expense by simply clicking on it.");
-			}else if(monetaryValues.length == 3) {
+			if(currIndex == 1) {
+				_popTip("You can edit or delete any income or expense by simply clicking on it.");
+			}else if(currIndex == 3) {
 				_popTip("To save your current calculations simply click on \"Save\". To load the calculations simply click \"Load\" and navigate to the downloaded file.")
 			}
 		}
@@ -602,14 +619,15 @@ function MonetaryAlteration(isExpense) {
 	
 	this.removeFormElements = function() {
 		document.getElementById("addedContent").innerHTML = "";
+		document.getElementById("formDelete").style.display = "none";
 	}
 	
 	this._addToList = function() {
 		if(this.editingIndex != -1) {
 			this._handleSaveEdit();
 		}else {
-			this.editingIndex = monetaryValues.length;
-			var onclickString = "'monetaryValues[" + monetaryValues.length + "].edit()'";
+			this.editingIndex = currIndex++;
+			var onclickString = "'monetaryValues[\"" + this.editingIndex + "\"].edit()'";
 			var str = "<li class='monetary-value-item' id='monetaryValue:" + this.editingIndex + "' onclick=" + onclickString + ">"+this._generatePrintedValue()+"</li>";
 			var id;
 			if(this.isExpense) {
@@ -618,10 +636,17 @@ function MonetaryAlteration(isExpense) {
 				id = "incomeListItems";
 			}
 			
-			monetaryValues.push(this);
+			monetaryValues[""+this.editingIndex] = this;
 			var list = document.getElementById(id);
 			list.innerHTML += str;
 		}
+	}
+	
+	this._removeFromList = function() {
+		var listItem = "<li class=\"monetary-value-item\" id=\"monetaryValue:"+this.editingIndex+"\" onclick=\"monetaryValues[&quot;"+this.editingIndex+"&quot;].edit()\">"+this._generatePrintedValue()+"</li>";
+		var id = (this.isExpense) ? "expenseListItems" : "incomeListItems";
+		var list = document.getElementById(id);
+		list.innerHTML = list.innerHTML.replace(listItem, "");
 	}
 	
 	this._handleSaveEdit = function() {
@@ -631,7 +656,7 @@ function MonetaryAlteration(isExpense) {
 	}
 	
 	this._generatePrintedValue = function() {
-		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;$"+_removeDecimals(this.amount);
+		return this.name+"&nbsp;&nbsp;&nbsp;&nbsp;$"+_removeExtraDecimalsAndAddCommas(this.amount);
 	}
 	
 	this.getMonetaryCalculation = function() {
